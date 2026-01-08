@@ -621,6 +621,12 @@ PS: Antworte mit #ja wenn du bereit bist.
       verifyObjective(command, output)
     }
 
+    // Detect if user read the discovery file - offer first mission
+    if (!activeMission && !pendingMissionOffer && command.includes('cat') && command.includes('nachricht')) {
+      // User read DATA's message! Offer the first mission
+      setPendingMissionOffer('damit_fing_der_wahnsinn_an')
+    }
+
     // Extract current directory from output (prompt shows path like "/root%" or "enterprise%")
     const extractCurrentDir = (out: string): string => {
       const lines = out.split('\n')
@@ -829,6 +835,8 @@ PS: Antworte mit #ja wenn du bereit bist.
             onCommand={handleTerminalCommand}
             onQuestion={handleUserQuestion}
             onMissionReady={handleMissionReady}
+            onDiscoveryReady={handleDiscoveryReady}
+            onReady={handleTerminalBoot}
           />
         </div>
       </div>
