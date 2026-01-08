@@ -17,7 +17,7 @@
 
 1. **ALWAYS update CLAUDE.md** after ANY change - version + "CONTINUE FROM HERE" section
 2. **ALWAYS update CHANGELOG** in `webapp/app/page.tsx` after any feature/change
-3. Use `npx vercel --prod` for deploys, then `npx vercel alias` for bash-quest.vercel.app
+3. **Deploy via git:** `git add . && git commit -m "msg" && git push` → Vercel auto-deploys
 
 ---
 
