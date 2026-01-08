@@ -102,6 +102,12 @@ export default function Home() {
 
   const CHANGELOG = `# Bash Quest Changelog
 
+## v0.9.10 - Better First Impression
+- Redesigned intro: short, punchy, mysterious
+- No more redundancy! Intro guides to EXPLORE (ls, cat)
+- Mission teaches NAVIGATE (pwd, cd) after you accept
+- Flow: see nachricht.txt → read it → say #ja → mission starts
+
 ## v0.9.9 - Feedback & Analytics
 - New "feedback" button - tell us what you think!
 - Click to rate your experience and leave comments
@@ -666,25 +672,23 @@ AN: Neuer Kadett
 
 Kadett,
 
-Wenn du das liest, hast du bereits gelernt
-wie man Dateien oeffnet. Gut.
+Gut. Du hast meine Nachricht gefunden.
 
-Die Enterprise braucht dich. Der Captain
-bruellt nach schwarzem Kaffee, aber der
-Maschinenraum ist VERSCHWUNDEN.
+Der Maschinenraum ist WEG. Daniel hat
+wieder *schnips* gemacht. Der Captain
+tobt und bruellt nach schwarzem Kaffee.
 
-Daniel hat wieder *schnips* gemacht.
+Ich brauche jemanden der das Schiff
+durchsuchen kann. Mit Terminal-Zugang.
 
-Deine erste Mission wartet. Finde heraus
-wo du bist. Orientiere dich. Dann melde
-dich bei mir.
+Ich brauche dich.
 
-Drei Buchstaben. Was sind sie?
+Bereit fuer deine erste Mission?
 
 - DATA
 
-PS: Antworte mit #ja wenn du bereit bist.
-    Oder erkunde erstmal frei mit #nein.
+PS: Schreib #ja im Chat rechts.
+    Oder #nein zum freien Erkunden.
 ===============================================`
 
   // Create discovery file when terminal boots

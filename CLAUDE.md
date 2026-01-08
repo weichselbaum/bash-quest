@@ -2,29 +2,27 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.9 - Feedback & Analytics!**
+**v0.9.10 - Redesigned First Message!**
 
-**NEW:** User feedback system + behavior analytics for learning insights
+**NEW:** Better onboarding flow - discovery before missions
 
-**Feedback System:**
-- New "feedback" button in header (next to changelog)
-- Modal with emoji rating (1-5) + text feedback
-- Stored in Redis: `feedback:all` and `feedback:user:<username>`
-- GET `/api/feedback` to retrieve all feedback for analysis
+**The Problem:**
+- Old intro said "Find where you are (pwd)"
+- Mission objective 1 also said "Find where you are (pwd)"
+- Redundant and hand-holdy!
 
-**Analytics Tracking:**
-- Tracks: session_start, command_run, command_error, ai_question, mission_start, mission_complete, mission_abandon, objective_complete
-- Daily aggregates in Redis: `analytics:daily:<date>`
-- GET `/api/analytics?days=7` for insights dashboard
-- Patterns: common errors, struggle topics, completion rates
-
-**Files added:**
-- `webapp/app/api/feedback/route.ts` - Feedback storage
-- `webapp/app/api/analytics/route.ts` - Behavior tracking + insights
+**The Fix - New Discovery Flow:**
+1. Intro sets scene: "Enterprise... Transporterunfall. Was liegt hier?"
+2. Player does `ls` → finds nachricht.txt
+3. Player does `cat nachricht.txt` → reads DATA's message
+4. DATA offers mission via #ja/#nein
+5. Mission starts → THEN pwd is objective 1
 
 **Files changed:**
-- `page.tsx`: Feedback modal, trackEvent() calls throughout
-- `globals.css`: Feedback modal styles
+- `route.ts`: New intro template (lines 311-337), updated narrator guidance (339-358)
+- `page.tsx`: Shorter nachricht.txt content (lines 661-686)
+
+**Key principle:** Intro guides to EXPLORE (ls, cat). Mission teaches NAVIGATE (pwd, cd).
 
 **Live at:** https://bash-quest.vercel.app
 **GitHub:** https://github.com/weichselbaum/bash-quest
@@ -55,7 +53,7 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 - Redis (Upstash) for user data
 - v86 emulator for Linux terminal (iframe isolated)
 
-## Current State (v0.9.9)
+## Current State (v0.9.10)
 
 **Working:**
 - User auth with Redis storage
