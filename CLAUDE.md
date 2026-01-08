@@ -2,14 +2,24 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.7 - Better Pacing**
+**v0.9.8 - WIP: Discovery Flow (Mission via Files)**
 
-- Mission offer waits for 3 commands (not 1) - let player explore first
-- If player says "nein", DATA asks again later (doesn't give up forever)
-- AI focuses on PROGRESSION: every command should show visible results
-- No more pointless "cd ~" when already home
+**NEW CONCEPT:** DATA communicates through FILES, not chat! Player discovers missions organically:
+1. Boot → player sees `auftrag.txt` file via `ls`
+2. Player `cat auftrag.txt` → reads DATA's message/mission briefing
+3. AI is narrator, not DATA speaking directly
+
+**DONE:**
+- `terminal.html`: Added `setup-discovery` message handler - creates files on boot
+- `V86Terminal.tsx`: Added `setupDiscovery()` function and `onDiscoveryReady` callback
+
+**TODO:**
+- `page.tsx`: Wire up discovery file creation on terminal boot
+- `page.tsx`: Detect `cat auftrag.txt` → trigger mission acceptance flow
+- `api/chat/route.ts`: Update AI to be narrator style (not speaking as DATA)
 
 **Live at:** https://bash-quest.vercel.app
+**GitHub:** https://github.com/weichselbaum/bash-quest
 
 ---
 
@@ -17,7 +27,7 @@
 
 1. **ALWAYS update CLAUDE.md** after ANY change - version + "CONTINUE FROM HERE" section
 2. **ALWAYS update CHANGELOG** in `webapp/app/page.tsx` after any feature/change
-3. **Deploy via git:** `git add . && git commit -m "msg" && git push` → Vercel auto-deploys
+3. **Deploy:** `git add . && git commit -m "msg" && git push` → Vercel auto-deploys
 
 ---
 
@@ -32,8 +42,8 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 ## Tech Stack
 
 - Next.js 16 + React 19
-- Groq API (Llama 3.3 70B) - FREE tier
-- Vercel hosting
+- Cerebras API (Llama 3.3 70B) - fast inference
+- Vercel hosting (auto-deploy from GitHub)
 - Redis (Upstash) for user data
 - v86 emulator for Linux terminal (iframe isolated)
 
@@ -41,72 +51,61 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 
 **Working:**
 - User auth with Redis storage
-- Chat with AI teacher (Groq/Llama 3.3 with fallback)
+- Chat with AI teacher (Cerebras/Llama 3.3)
 - AI learner profiles (tracks commands, mastery, struggles, rapport)
 - Side-by-side layout (terminal left, chat right)
 - v86 terminal boots Linux successfully
 - Direct typing in terminal - commands run directly
 - # prefix for AI questions (bash comment syntax)
-- XP bar and leveling system
 - Mission system with SiW-themed stories
+- RPG-style mission offers in dialogue ("ja"/"nein")
 - Mission HUD shows current objective
 - TAB completion works for mission verification
-- Key repeat rate throttled
+- AI gets current directory for smarter suggestions
+
+**Hidden for now:**
+- XP bar and leveling UI (SHOW_LEVELING_UI = false)
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `webapp/public/v86/terminal.html` | Standalone v86 terminal - handles all emulator logic, screen capture, command detection |
-| `webapp/app/components/V86Terminal.tsx` | React wrapper - embeds terminal.html via iframe, postMessage communication |
-| `webapp/app/api/chat/route.ts` | AI chat with learner profile integration |
-| `webapp/app/api/auth/route.ts` | Redis auth with learner profile |
-| `webapp/app/page.tsx` | Main game UI |
+| `webapp/public/v86/terminal.html` | v86 terminal - emulator, screen capture, command detection |
+| `webapp/app/components/V86Terminal.tsx` | React wrapper - iframe + postMessage |
+| `webapp/app/api/chat/route.ts` | AI chat with learner profiles |
+| `webapp/app/api/missions/route.ts` | Mission start/verify/complete |
+| `webapp/app/lib/missions.ts` | Mission definitions (SiW themed) |
+| `webapp/app/page.tsx` | Main game UI + CHANGELOG |
 | `webapp/app/globals.css` | Styling |
-| `webapp/app/lib/levels.ts` | XP/leveling system |
-
-## How Terminal Output Capture Works
-
-1. User types command directly in terminal
-2. `terminal.html` tracks keystrokes for detecting Enter
-3. After 1.5s delay, extracts actual command FROM SCREEN (supports TAB completion!)
-4. Grabs screen text via `get_text_screen()`, finds prompt line with command
-5. Sends command + output to parent via postMessage
-6. React component forwards to AI chat + mission verification
 
 ## Environment Variables (Vercel)
 
-- `GROQ_API_KEY` - Groq API key
+- `CEREBRAS_API_KEY` - Cerebras API key
 - `REDIS_URL` - Upstash Redis connection string
 
 ## Deploy
 
-**Local deploys:** `npx vercel --prod` (CLI required for uploading local files)
-**Then alias with MCP:** `mcp__vercel__vercel_assign_alias`
+Just push to GitHub:
+```bash
+git add . && git commit -m "your message" && git push
+```
+Vercel auto-deploys to https://bash-quest.vercel.app
 
-**Use MCP for everything else:**
-- `mcp__vercel__vercel_list_deployments` - check status
-- `mcp__vercel__vercel_assign_alias` - set bash-quest.vercel.app
-- `mcp__vercel__vercel_list_env_vars` - manage env vars
-- `mcp__vercel__vercel_get_deployment_logs` - debugging
+## Multi-Terminal Workflow
+
+When working with multiple Claude instances:
+1. `git pull` before starting work (sync latest)
+2. Work on different files if possible
+3. `git push` when done
+4. Git handles conflicts
 
 ## Roadmap
 
 ### Keyboard Shortcuts Mission (Future)
-Teach terminal power-user shortcuts:
-- **TAB** - Autocomplete (already hinted in mission 1)
-- **Ctrl+C** - Cancel/kill current command
-- **Ctrl+L** - Clear screen (like `clear`)
-- **Ctrl+A** - Jump to beginning of line
-- **Ctrl+E** - Jump to end of line
-- **Ctrl+U** - Clear line before cursor
-- **Ctrl+W** - Delete word before cursor
-- **Ctrl+R** - Reverse search history
-- **Up/Down** - Navigate command history
-
-Could be a "Terminal Power User" or "Keyboard Ninja" mission.
+- TAB, Ctrl+C, Ctrl+L, Ctrl+A/E, Ctrl+U/W, Ctrl+R, Up/Down
 
 ## Notes
 
 - Building for his son (snace)
-- Rapport tracking now handled IN THE GAME (v0.9.0)
+- SiW = "Sinnlos im Weltraum" (German Star Trek parody)
+- DATA character inspired by SiW Data

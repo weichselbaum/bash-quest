@@ -372,6 +372,34 @@
             }, 1500);
           }
 
+          // Discovery file setup - create mission briefing file on boot
+          if (e.data && e.data.type === 'setup-discovery') {
+            const filename = e.data.filename || 'auftrag.txt';
+            const content = e.data.content;
+            console.log('Setting up discovery file:', filename);
+
+            // Create the file using cat with heredoc
+            const createCmd = 'cat > ~/' + filename + " << 'ENDE'\n" + content + "\nENDE";
+
+            // Send each character
+            for (let i = 0; i < createCmd.length; i++) {
+              emulator.keyboard_send_text(createCmd[i]);
+            }
+            // Send Enter
+            emulator.keyboard_send_scancodes([0x1C, 0x9C]);
+
+            // Clear screen after creation so user doesn't see the command
+            setTimeout(function() {
+              emulator.keyboard_send_text('clear');
+              emulator.keyboard_send_scancodes([0x1C, 0x9C]);
+
+              window.parent.postMessage({
+                type: 'discovery-ready',
+                filename: filename
+              }, '*');
+            }, 500);
+          }
+
           // Mission setup - inject shell commands to pre-populate environment
           if (e.data && e.data.type === 'setup-mission') {
             const script = e.data.script;

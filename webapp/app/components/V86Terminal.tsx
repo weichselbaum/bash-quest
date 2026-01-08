@@ -6,13 +6,15 @@ interface V86TerminalProps {
   onCommand: (command: string, output: string) => void
   onQuestion: (question: string) => void
   onMissionReady?: () => void
+  onDiscoveryReady?: (filename: string) => void
 }
 
 export interface V86TerminalRef {
   setupMission: (missionId: string, script: string) => void
+  setupDiscovery: (filename: string, content: string) => void
 }
 
-const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, onQuestion, onMissionReady }, ref) => {
+const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, onQuestion, onMissionReady, onDiscoveryReady }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -24,6 +26,16 @@ const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, o
           type: 'setup-mission',
           missionId,
           script
+        }, '*')
+      }
+    },
+    setupDiscovery: (filename: string, content: string) => {
+      if (iframeRef.current?.contentWindow) {
+        console.log('Sending setup-discovery to iframe:', filename)
+        iframeRef.current.contentWindow.postMessage({
+          type: 'setup-discovery',
+          filename,
+          content
         }, '*')
       }
     }
@@ -47,6 +59,9 @@ const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, o
       } else if (e.data?.type === 'mission-ready') {
         console.log('Mission ready:', e.data.missionId)
         onMissionReady?.()
+      } else if (e.data?.type === 'discovery-ready') {
+        console.log('Discovery file ready:', e.data.filename)
+        onDiscoveryReady?.(e.data.filename)
       }
     }
 
