@@ -2,24 +2,29 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.8 - Discovery Flow Complete!**
+**v0.9.9 - Feedback & Analytics!**
 
-**NEW UX:** DATA communicates through FILES, not chat!
-1. Epic intro plays (unchanged)
-2. Terminal boots → creates `nachricht.txt` with DATA's transmission
-3. Player does `ls` → sees the file
-4. Player `cat nachricht.txt` → reads DATA's message, triggers mission offer
-5. AI is now narrator mode (guides to discoveries, doesn't speak AS DATA)
+**NEW:** User feedback system + behavior analytics for learning insights
 
-**Flow:** Intro → pwd → ls → cat nachricht.txt → mission offer → accept → mission starts
+**Feedback System:**
+- New "feedback" button in header (next to changelog)
+- Modal with emoji rating (1-5) + text feedback
+- Stored in Redis: `feedback:all` and `feedback:user:<username>`
+- GET `/api/feedback` to retrieve all feedback for analysis
+
+**Analytics Tracking:**
+- Tracks: session_start, command_run, command_error, ai_question, mission_start, mission_complete, mission_abandon, objective_complete
+- Daily aggregates in Redis: `analytics:daily:<date>`
+- GET `/api/analytics?days=7` for insights dashboard
+- Patterns: common errors, struggle topics, completion rates
+
+**Files added:**
+- `webapp/app/api/feedback/route.ts` - Feedback storage
+- `webapp/app/api/analytics/route.ts` - Behavior tracking + insights
 
 **Files changed:**
-- `terminal.html`: setup-discovery handler creates files
-- `V86Terminal.tsx`: setupDiscovery() + onReady callback
-- `page.tsx`: Creates nachricht.txt on boot, detects cat to offer mission
-- `api/chat/route.ts`: Narrator mode after intro
-
-**Also shipped:** Chat history capped to 50 messages (Redis fix)
+- `page.tsx`: Feedback modal, trackEvent() calls throughout
+- `globals.css`: Feedback modal styles
 
 **Live at:** https://bash-quest.vercel.app
 **GitHub:** https://github.com/weichselbaum/bash-quest
@@ -50,7 +55,7 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 - Redis (Upstash) for user data
 - v86 emulator for Linux terminal (iframe isolated)
 
-## Current State (v0.9.8)
+## Current State (v0.9.9)
 
 **Working:**
 - User auth with Redis storage
@@ -65,6 +70,8 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 - Mission HUD shows current objective
 - TAB completion works for mission verification
 - AI gets current directory for smarter suggestions
+- **Feedback system** - users can submit feedback via modal
+- **Analytics tracking** - behavior tracked for learning insights
 
 **Hidden for now:**
 - XP bar and leveling UI (SHOW_LEVELING_UI = false)
@@ -77,6 +84,8 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 | `webapp/app/components/V86Terminal.tsx` | React wrapper - iframe + postMessage |
 | `webapp/app/api/chat/route.ts` | AI chat with learner profiles |
 | `webapp/app/api/missions/route.ts` | Mission start/verify/complete |
+| `webapp/app/api/feedback/route.ts` | User feedback storage + retrieval |
+| `webapp/app/api/analytics/route.ts` | Behavior tracking + insights |
 | `webapp/app/lib/missions.ts` | Mission definitions (SiW themed) |
 | `webapp/app/page.tsx` | Main game UI + CHANGELOG |
 | `webapp/app/globals.css` | Styling |

@@ -93,9 +93,20 @@ export default function Home() {
   const [commandsSinceOffer, setCommandsSinceOffer] = useState(0) // Track commands to know when to offer mission
   const [discoveryFileReady, setDiscoveryFileReady] = useState(false) // Track if discovery file exists
   const [terminalBooted, setTerminalBooted] = useState(false) // Track terminal boot state
+  const [showFeedback, setShowFeedback] = useState(false) // Feedback modal
+  const [feedbackText, setFeedbackText] = useState('')
+  const [feedbackRating, setFeedbackRating] = useState<number | null>(null)
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false)
   const terminalRef = useRef<V86TerminalRef>(null)
 
   const CHANGELOG = `# Bash Quest Changelog
+
+## v0.9.9 - Feedback & Analytics
+- New "feedback" button - tell us what you think!
+- Click to rate your experience and leave comments
+- Behind the scenes: tracking learning patterns to improve the game
+- View analytics at /api/analytics (for devs)
 
 ## v0.9.8 - Discovery Flow
 - DATA now communicates through FILES you discover!
@@ -305,6 +316,18 @@ export default function Home() {
       setCookie('bashquest_user', JSON.stringify(userData), 30)
       setUser(userData)
 
+      // Track session start
+      fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'track',
+          username: userData.username,
+          event: 'session_start',
+          data: { returning: data.user.messages?.length > 0 }
+        })
+      }).catch(() => {})
+
       if (data.user.messages?.length > 0) {
         setMessages(data.user.messages)
       } else {
@@ -324,6 +347,58 @@ export default function Home() {
     setMessages([])
     setLoginUsername('')
     setLoginPassword('')
+  }
+
+  // Analytics tracking helper
+  const trackEvent = useCallback(async (event: string, data?: Record<string, unknown>) => {
+    if (!user) return
+    try {
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'track',
+          username: user.username,
+          event,
+          data
+        })
+      })
+    } catch (e) {
+      // Silent fail - don't disrupt UX for analytics
+    }
+  }, [user])
+
+  // Feedback submission handler
+  const handleSubmitFeedback = async () => {
+    if (!user || !feedbackText.trim()) return
+    setFeedbackSubmitting(true)
+
+    try {
+      await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'submit',
+          username: user.username,
+          text: feedbackText,
+          rating: feedbackRating,
+          currentMission: activeMission?.id || null,
+          userLevel: user.level,
+          sessionContext: `Messages: ${messages.length}, Commands since offer: ${commandsSinceOffer}`
+        })
+      })
+      setFeedbackSuccess(true)
+      setFeedbackText('')
+      setFeedbackRating(null)
+      // Auto-close after success
+      setTimeout(() => {
+        setShowFeedback(false)
+        setFeedbackSuccess(false)
+      }, 2000)
+    } catch (e) {
+      console.error('Feedback submission failed:', e)
+    }
+    setFeedbackSubmitting(false)
   }
 
   const handleFullReset = async () => {
@@ -437,6 +512,9 @@ export default function Home() {
           setShowMissionBriefing(null)
           setShowMissionSelect(false)
 
+          // Track mission start
+          trackEvent('mission_start', { missionId, title: mission.title })
+
           // Add mission briefing to chat as story intro (no markdown - chat is plain text)
           const storyIntro = `${mission.emoji} ${mission.title.toUpperCase()}\n\n${mission.briefing}`
           setMessages(prev => [...prev, { role: 'assistant', content: storyIntro, type: 'mission-story' }])
@@ -510,7 +588,22 @@ export default function Home() {
       if (data.objectiveComplete) {
         setMissionObjectivesCompleted(prev => [...prev, currentObjective.id])
 
+        // Track objective completion
+        trackEvent('objective_complete', {
+          missionId: activeMission.id,
+          objectiveId: currentObjective.id,
+          objectiveIndex: currentObjectiveIndex + 1,
+          totalObjectives: activeMission.objectives.length
+        })
+
         if (data.missionComplete) {
+          // Track mission complete
+          trackEvent('mission_complete', {
+            missionId: activeMission.id,
+            title: activeMission.title,
+            xpEarned: data.xpEarned
+          })
+
           // Mission complete!
           setMissionComplete({
             emoji: activeMission.emoji,
@@ -534,6 +627,14 @@ export default function Home() {
 
   const abandonMission = async () => {
     if (!user || !activeMission) return
+
+    // Track mission abandon
+    trackEvent('mission_abandon', {
+      missionId: activeMission.id,
+      title: activeMission.title,
+      objectivesCompleted: missionObjectivesCompleted.length,
+      totalObjectives: activeMission.objectives.length
+    })
 
     try {
       await fetch('/api/missions', {
@@ -619,6 +720,18 @@ PS: Antworte mit #ja wenn du bereit bist.
   const handleTerminalCommand = useCallback(async (command: string, output: string) => {
     if (!user || loading) return
 
+    // Track command for analytics
+    const hasError = output.toLowerCase().includes('not found') ||
+                     output.toLowerCase().includes('no such file') ||
+                     output.toLowerCase().includes('permission denied') ||
+                     output.toLowerCase().includes('error')
+    trackEvent(hasError ? 'command_error' : 'command_run', {
+      command: command.split(' ')[0], // Just the base command
+      fullCommand: command,
+      hasError,
+      missionId: activeMission?.id || null
+    })
+
     // If mission is active, verify objective
     if (activeMission && !missionSetupPending) {
       verifyObjective(command, output)
@@ -688,7 +801,7 @@ PS: Antworte mit #ja wenn du bereit bist.
       setMessages([...newMessages, { role: 'assistant', content: '⚠️ Connection lost. Try again!' }])
     }
     setLoading(false)
-  }, [user, messages, loading, handleXPUpdate, activeMission, missionSetupPending, verifyObjective])
+  }, [user, messages, loading, handleXPUpdate, activeMission, missionSetupPending, verifyObjective, trackEvent])
 
   // Handle # comments from terminal as questions to AI
   const handleUserQuestion = useCallback(async (question: string) => {
@@ -731,6 +844,12 @@ PS: Antworte mit #ja wenn du bereit bist.
       }
     }
 
+    // Track AI question
+    trackEvent('ai_question', {
+      questionLength: question.length,
+      missionId: activeMission?.id || null
+    })
+
     const newMessages: Message[] = [...messages, { role: 'user', content: question }]
     setMessages(newMessages)
     setLoading(true)
@@ -767,7 +886,7 @@ PS: Antworte mit #ja wenn du bereit bist.
       setMessages([...newMessages, { role: 'assistant', content: '⚠️ Connection lost. Try again!' }])
     }
     setLoading(false)
-  }, [user, messages, loading, handleXPUpdate, handleLogout, pendingMissionOffer, startMission])
+  }, [user, messages, loading, handleXPUpdate, handleLogout, pendingMissionOffer, startMission, activeMission, currentObjectiveIndex, missionObjectivesCompleted, trackEvent])
 
   if (isLoading) {
     return (
@@ -869,6 +988,7 @@ PS: Antworte mit #ja wenn du bereit bist.
             <div className="header-buttons">
               <button className="mission-btn" onClick={() => setShowMissionSelect(true)}>Missions</button>
               <button className="changelog-btn" onClick={() => setShowChangelog(true)}>changelog</button>
+              <button className="feedback-btn" onClick={() => setShowFeedback(true)}>feedback</button>
               <button className="logout-btn" onClick={handleLogout}>logout</button>
             </div>
           </div>
@@ -879,6 +999,50 @@ PS: Antworte mit #ja wenn du bereit bist.
             <div className="modal" onClick={e => e.stopPropagation()}>
               <button className="modal-close" onClick={() => setShowChangelog(false)}>×</button>
               <pre className="changelog-content">{CHANGELOG}</pre>
+            </div>
+          </div>
+        )}
+
+        {showFeedback && (
+          <div className="modal-overlay" onClick={() => setShowFeedback(false)}>
+            <div className="modal feedback-modal" onClick={e => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setShowFeedback(false)}>×</button>
+              {feedbackSuccess ? (
+                <div className="feedback-success">
+                  <div className="feedback-success-icon">✓</div>
+                  <p>Thanks for your feedback!</p>
+                </div>
+              ) : (
+                <>
+                  <h3>Send Feedback</h3>
+                  <p className="feedback-subtitle">Help us improve Bash Quest</p>
+                  <div className="feedback-rating">
+                    {[1, 2, 3, 4, 5].map(rating => (
+                      <button
+                        key={rating}
+                        className={`rating-btn ${feedbackRating === rating ? 'active' : ''}`}
+                        onClick={() => setFeedbackRating(rating)}
+                      >
+                        {rating <= 2 ? '😕' : rating === 3 ? '😐' : rating === 4 ? '😊' : '🤩'}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    className="feedback-textarea"
+                    value={feedbackText}
+                    onChange={e => setFeedbackText(e.target.value)}
+                    placeholder="What's on your mind? Bug reports, feature ideas, or just say hi..."
+                    rows={4}
+                  />
+                  <button
+                    className="feedback-submit"
+                    onClick={handleSubmitFeedback}
+                    disabled={feedbackSubmitting || !feedbackText.trim()}
+                  >
+                    {feedbackSubmitting ? 'Sending...' : 'Send Feedback'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}
