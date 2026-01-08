@@ -2,7 +2,13 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.8 - WIP: Discovery Flow (Mission via Files)**
+**v0.9.8 - Storage Fix + WIP Discovery Flow**
+
+**SHIPPED:**
+- Chat history capped to last 50 messages (was unbounded → Redis bloat at 30MB)
+- Fix in `api/auth/route.ts` line 241
+
+**WIP: Discovery Flow (Mission via Files)**
 
 **NEW CONCEPT:** DATA communicates through FILES, not chat! Player discovers missions organically:
 1. Boot → player sees `auftrag.txt` file via `ls`
@@ -47,7 +53,7 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 - Redis (Upstash) for user data
 - v86 emulator for Linux terminal (iframe isolated)
 
-## Current State (v0.9.7)
+## Current State (v0.9.8)
 
 **Working:**
 - User auth with Redis storage

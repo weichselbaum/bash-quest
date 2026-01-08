@@ -7,6 +7,7 @@ interface V86TerminalProps {
   onQuestion: (question: string) => void
   onMissionReady?: () => void
   onDiscoveryReady?: (filename: string) => void
+  onReady?: () => void
 }
 
 export interface V86TerminalRef {
@@ -14,7 +15,7 @@ export interface V86TerminalRef {
   setupDiscovery: (filename: string, content: string) => void
 }
 
-const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, onQuestion, onMissionReady, onDiscoveryReady }, ref) => {
+const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, onQuestion, onMissionReady, onDiscoveryReady, onReady }, ref) => {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -50,6 +51,8 @@ const V86Terminal = forwardRef<V86TerminalRef, V86TerminalProps>(({ onCommand, o
         setTimeout(() => {
           iframeRef.current?.focus()
         }, 100)
+        // Notify parent that terminal is ready
+        onReady?.()
       } else if (e.data?.type === 'command-output') {
         console.log('Command output:', e.data.command, e.data.output?.slice(0, 100))
         onCommand(e.data.command, e.data.output || '')

@@ -91,9 +91,15 @@ export default function Home() {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [pendingMissionOffer, setPendingMissionOffer] = useState<string | null>(null) // RPG-style: mission ID offered by DATA
   const [commandsSinceOffer, setCommandsSinceOffer] = useState(0) // Track commands to know when to offer mission
+  const [discoveryFileReady, setDiscoveryFileReady] = useState(false) // Track if discovery file exists
+  const [terminalBooted, setTerminalBooted] = useState(false) // Track terminal boot state
   const terminalRef = useRef<V86TerminalRef>(null)
 
   const CHANGELOG = `# Bash Quest Changelog
+
+## v0.9.8 - Storage Fix
+- Capped chat history to last 50 messages (was unbounded → Redis bloat)
+- Learner profile still persists all important data
 
 ## v0.9.7 - Better Pacing
 - Mission offer now waits for 3 commands (not 1) - explore first!
@@ -546,6 +552,51 @@ export default function Home() {
 
   const handleMissionReady = useCallback(() => {
     setMissionSetupPending(false)
+  }, [])
+
+  // Discovery file content - DATA's first message as a file
+  const DISCOVERY_FILE_CONTENT = `===============================================
+TRANSMISSION VON: DATA
+AN: Neuer Kadett
+===============================================
+
+Kadett,
+
+Wenn du das liest, hast du bereits gelernt
+wie man Dateien oeffnet. Gut.
+
+Die Enterprise braucht dich. Der Captain
+bruellt nach schwarzem Kaffee, aber der
+Maschinenraum ist VERSCHWUNDEN.
+
+Daniel hat wieder *schnips* gemacht.
+
+Deine erste Mission wartet. Finde heraus
+wo du bist. Orientiere dich. Dann melde
+dich bei mir.
+
+Drei Buchstaben. Was sind sie?
+
+- DATA
+
+PS: Antworte mit #ja wenn du bereit bist.
+    Oder erkunde erstmal frei mit #nein.
+===============================================`
+
+  // Create discovery file when terminal boots
+  const handleTerminalBoot = useCallback(() => {
+    setTerminalBooted(true)
+    // Wait a moment for terminal to be fully ready, then create discovery file
+    setTimeout(() => {
+      if (terminalRef.current && !activeMission) {
+        terminalRef.current.setupDiscovery('nachricht.txt', DISCOVERY_FILE_CONTENT)
+      }
+    }, 3000) // Wait 3s after boot for shell to be ready
+  }, [activeMission])
+
+  const handleDiscoveryReady = useCallback((filename: string) => {
+    console.log('Discovery file created:', filename)
+    setDiscoveryFileReady(true)
   }, [])
 
   // Load missions when user logs in

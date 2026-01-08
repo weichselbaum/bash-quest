@@ -238,7 +238,7 @@ export async function POST(req: Request) {
       const existingUser: UserData = JSON.parse(existingUserJson)
       existingUser.level = level ?? existingUser.level
       existingUser.xp = xp ?? existingUser.xp
-      existingUser.messages = messages ?? existingUser.messages
+      existingUser.messages = (messages ?? existingUser.messages).slice(-50) // Cap at 50 messages
       if (learnerProfile) {
         existingUser.learnerProfile = learnerProfile
       }
