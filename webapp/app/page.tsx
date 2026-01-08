@@ -97,9 +97,12 @@ export default function Home() {
 
   const CHANGELOG = `# Bash Quest Changelog
 
-## v0.9.8 - Storage Fix
-- Capped chat history to last 50 messages (was unbounded → Redis bloat)
-- Learner profile still persists all important data
+## v0.9.8 - Discovery Flow
+- DATA now communicates through FILES you discover!
+- On boot, find nachricht.txt - DATA's transmission awaits
+- cat the file to read his message and trigger mission offer
+- AI becomes narrator after intro (guides you to discoveries)
+- Also: capped chat history to 50 messages (Redis storage fix)
 
 ## v0.9.7 - Better Pacing
 - Mission offer now waits for 3 commands (not 1) - explore first!

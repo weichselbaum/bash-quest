@@ -2,27 +2,24 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.8 - Storage Fix + WIP Discovery Flow**
+**v0.9.8 - Discovery Flow Complete!**
 
-**SHIPPED:**
-- Chat history capped to last 50 messages (was unbounded → Redis bloat at 30MB)
-- Fix in `api/auth/route.ts` line 241
+**NEW UX:** DATA communicates through FILES, not chat!
+1. Epic intro plays (unchanged)
+2. Terminal boots → creates `nachricht.txt` with DATA's transmission
+3. Player does `ls` → sees the file
+4. Player `cat nachricht.txt` → reads DATA's message, triggers mission offer
+5. AI is now narrator mode (guides to discoveries, doesn't speak AS DATA)
 
-**WIP: Discovery Flow (Mission via Files)**
+**Flow:** Intro → pwd → ls → cat nachricht.txt → mission offer → accept → mission starts
 
-**NEW CONCEPT:** DATA communicates through FILES, not chat! Player discovers missions organically:
-1. Boot → player sees `auftrag.txt` file via `ls`
-2. Player `cat auftrag.txt` → reads DATA's message/mission briefing
-3. AI is narrator, not DATA speaking directly
+**Files changed:**
+- `terminal.html`: setup-discovery handler creates files
+- `V86Terminal.tsx`: setupDiscovery() + onReady callback
+- `page.tsx`: Creates nachricht.txt on boot, detects cat to offer mission
+- `api/chat/route.ts`: Narrator mode after intro
 
-**DONE:**
-- `terminal.html`: Added `setup-discovery` message handler - creates files on boot
-- `V86Terminal.tsx`: Added `setupDiscovery()` function and `onDiscoveryReady` callback
-
-**TODO:**
-- `page.tsx`: Wire up discovery file creation on terminal boot
-- `page.tsx`: Detect `cat auftrag.txt` → trigger mission acceptance flow
-- `api/chat/route.ts`: Update AI to be narrator style (not speaking as DATA)
+**Also shipped:** Chat history capped to 50 messages (Redis fix)
 
 **Live at:** https://bash-quest.vercel.app
 **GitHub:** https://github.com/weichselbaum/bash-quest
