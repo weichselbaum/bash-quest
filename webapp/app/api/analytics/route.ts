@@ -203,7 +203,7 @@ function countByField(events: AnalyticsEvent[], fieldPath: string): Record<strin
   return counts
 }
 
-function getNestedValue(obj: Record<string, unknown>, path: string): string | undefined {
+function getNestedValue(obj: object, path: string): string | undefined {
   const parts = path.split('.')
   let current: unknown = obj
   for (const part of parts) {

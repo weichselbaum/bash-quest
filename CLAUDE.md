@@ -2,27 +2,17 @@
 
 ## CONTINUE FROM HERE
 
-**v0.9.10 - Redesigned First Message!**
+**v0.9.11 - Security dependency upgrade**
 
-**NEW:** Better onboarding flow - discovery before missions
+**NEW:** Next.js 16.1.1 → 16.4.5, plus non-breaking high/critical transitive fixes. `npm audit` is clean.
 
-**The Problem:**
-- Old intro said "Find where you are (pwd)"
-- Mission objective 1 also said "Find where you are (pwd)"
-- Redundant and hand-holdy!
+**What changed:**
+- `next` pinned to 16.4.5 (4 critical advisories, plus the high advisories in that range)
+- Transitive: `postcss` 8.5.23, `sharp` 0.35.5, `nanoid` 3.3.20, `source-map-js` 1.2.2, `form-data` 4.0.6
+- Moderate `baseline-browser-mapping` resolved to 2.11.35 along the way
+- Compile fixes so `tsc` and `next build` pass: escaped backticks inside the DATA system prompt; `getNestedValue` accepts `object`
 
-**The Fix - New Discovery Flow:**
-1. Intro sets scene: "Enterprise... Transporterunfall. Was liegt hier?"
-2. Player does `ls` → finds nachricht.txt
-3. Player does `cat nachricht.txt` → reads DATA's message
-4. DATA offers mission via #ja/#nein
-5. Mission starts → THEN pwd is objective 1
-
-**Files changed:**
-- `route.ts`: New intro template (lines 311-337), updated narrator guidance (339-358)
-- `page.tsx`: Shorter nachricht.txt content (lines 661-686)
-
-**Key principle:** Intro guides to EXPLORE (ls, cat). Mission teaches NAVIGATE (pwd, cd).
+**Verified:** `npm install`, `tsc --noEmit`, `next build` (Next.js 16.4.5 / Turbopack). No lint script and no test suite in this repo.
 
 **Live at:** https://bash-quest.vercel.app
 **GitHub:** https://github.com/weichselbaum/bash-quest
@@ -47,13 +37,13 @@ Lukas - building this for his son. Values kaizen, direct communication. Don't wa
 
 ## Tech Stack
 
-- Next.js 16 + React 19
+- Next.js 16.4.5 + React 19
 - Cerebras API (Llama 3.3 70B) - fast inference
 - Vercel hosting (auto-deploy from GitHub)
 - Redis (Upstash) for user data
 - v86 emulator for Linux terminal (iframe isolated)
 
-## Current State (v0.9.10)
+## Current State (v0.9.11)
 
 **Working:**
 - User auth with Redis storage
