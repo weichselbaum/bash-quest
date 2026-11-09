@@ -102,6 +102,11 @@ export default function Home() {
 
   const CHANGELOG = `# Bash Quest Changelog
 
+## v0.9.11 - Security upgrade
+- Next.js 16.1.1 → 16.4.5 (critical advisories)
+- Also patched form-data, postcss, sharp, nanoid, and source-map-js
+- npm audit is clean
+
 ## v0.9.10 - Better First Impression
 - Redesigned intro: short, punchy, mysterious
 - No more redundancy! Intro guides to EXPLORE (ls, cat)
